@@ -1,0 +1,19 @@
+model Booking {
+    id               String         @id @default(uuid())
+    studentProfileId String
+    studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+    tutorProfileId   String
+    tutorProfile     TutorProfile   @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
+    availabilityId   String
+    availability     Availability   @relation(fields: [availabilityId], references: [id], onDelete: Cascade)
+    status           String // "pending" | "confirmed" | "completed" | "cancelled"
+    paymentStatus    String         @default("unpaid") // "unpaid" | "paid" | "cash"
+    review           Review?
+    createdAt        DateTime       @default(now())
+
+    amount                  Float?
+    currency                String?
+    stripeCheckoutSessionId String? @unique
+
+    @@map("booking")
+}

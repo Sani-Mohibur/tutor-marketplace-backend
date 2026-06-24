@@ -1,0 +1,18 @@
+model Availability {
+    id             String       @id @default(uuid())
+    tutorProfileId String
+    tutorProfile   TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
+    title          String? // Added: e.g., "Advanced System Design Mastering"
+    subject        String? // Added: e.g., "Backend Engineering"
+    details        String?
+    location       String?
+    slot           DateTime
+    timeDuration   String? // "120" 
+    pricePerHour   Float?
+    status         String       @default("pending") // "pending" | "confirmed"
+    isBooked       Boolean      @default(false)
+    paymentMethod  String       @default("cash") // "cash" | "stripe" | "both"
+    bookings       Booking[]
+
+    @@map("availability")
+}

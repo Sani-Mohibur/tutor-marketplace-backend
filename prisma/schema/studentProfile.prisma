@@ -1,0 +1,14 @@
+model StudentProfile {
+    id        String    @id @default(uuid())
+    userId    String    @unique
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    bio       String?
+    education String? // e.g., "High School", "University"
+    interests String[] // Array of topics they want to learn
+    bookings  Booking[]
+    reviews   Review[]
+    phone     String?
+    address   String?
+
+    @@map("student_profile")
+}
