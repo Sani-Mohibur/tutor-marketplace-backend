@@ -90,8 +90,8 @@ const createCheckoutSessionService = async (
       studentProfileId: studentProfile.id,
       tutorProfileId: tutorProfile.id,
     },
-    success_url: `${process.env.CLIENT_URL}/bookings/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.CLIENT_URL}/bookings/payment-cancel?booking_id=${booking.id}`,
+    success_url: `${process.env.CLIENT_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.CLIENT_URL}/payment-cancel?booking_id=${booking.id}`,
   });
 
   return { url: session.url, sessionId: session.id };
