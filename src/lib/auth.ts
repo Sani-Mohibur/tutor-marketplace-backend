@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma.js";
 import { USER_ROLES } from "../constants/user.constants.js";
 import { APIError, createAuthMiddleware } from "better-auth/api";
+import { sendVerificationEmail, sendResetPasswordEmail } from "./email.js";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -11,7 +12,18 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url, token }) => {
+      const clientUrl = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
+      await sendResetPasswordEmail(user.email, clientUrl);
+    },
   },
+
+  // emailVerification: {
+  //   sendOnSignUp: true,
+  //   sendVerificationEmail: async ({ user, url, token }, request) => {
+  //     await sendVerificationEmail(user.email, url);
+  //   },
+  // },
 
   trustedOrigins: [process.env.CLIENT_URL!],
   advanced: {
