@@ -3,14 +3,17 @@ import nodemailer from "nodemailer";
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "mdfarabi200@gmail.com",
-    pass: "zgfj hcsg wwsr zewe",
+    user: process.env.EMAIL_USER || "",
+    pass: process.env.EMAIL_PASS || "",
   },
 });
 
+const getFromEmail = () =>
+  `"Skill Bridge" <${process.env.EMAIL_USER || "mdfarabi200@gmail.com"}>`;
+
 export const sendVerificationEmail = async (to: string, url: string) => {
   const mailOptions = {
-    from: '"Skill Bridge" <mdfarabi200@gmail.com>',
+    from: getFromEmail(),
     to,
     subject: "Verify your email address - Skill Bridge",
     html: `
