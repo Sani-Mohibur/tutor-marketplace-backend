@@ -113,9 +113,27 @@ const createDirectCheckout = catchAsync(
   },
 );
 
+const downloadReceiptPDF = catchAsync(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const { sessionId } = req.params;
+    if (!sessionId) throw new ApiError(400, "Session ID is required.");
+
+    const { pdfBuffer, bookingId } =
+      await paymentService.generateReceiptPDFService(sessionId as string);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="Receipt-${bookingId}.pdf"`,
+    );
+    res.send(pdfBuffer);
+  },
+);
+
 export const paymentController = {
   createCheckoutSession,
   createDirectCheckout,
   handleWebhook,
   getPaymentDetails,
+  downloadReceiptPDF,
 };

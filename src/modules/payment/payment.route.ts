@@ -26,6 +26,12 @@ paymentRouter.get(
   paymentController.getPaymentDetails,
 );
 
+paymentRouter.get(
+  "/receipt/:sessionId/download",
+  requireAuth([USER_ROLES.STUDENT]),
+  paymentController.downloadReceiptPDF,
+);
+
 // Note: The webhook route is registered separately in app.ts
 // because it needs express.raw() instead of express.json()
 
