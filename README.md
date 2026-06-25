@@ -413,11 +413,11 @@ STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_REFRESH_TOKEN=your_google_refresh_token
-EMAIL_USER=[your_gmail_address@gmail.com](mailto:your_gmail_address@gmail.com)
+EMAIL_USER=your_gmail_address@gmail.com
 
 # Brevo (optional alternative)
 BREVO_API_KEY=your_brevo_api_key
-EMAIL_USER=[your_verified_sender_email@example.com](mailto:your_verified_sender_email@example.com)
+EMAIL_USER=your_verified_sender_email@example.com
 
 ```
 
