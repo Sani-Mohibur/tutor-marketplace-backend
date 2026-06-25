@@ -53,7 +53,7 @@ A robust, role-based REST API powering a tutor-student marketplace platform — 
 
 ## Overview
 
-**SkillBridge** is a full-stack tutoring marketplace platform. This repository contains the backend API server that handles:
+**Tutor Marketplace** is a full-stack tutoring marketplace platform. This repository contains the backend API server that handles:
 
 - **User authentication** via `better-auth` (email/password with session cookies)
 - **Role-based access control** for three user types: `student`, `tutor`, and `admin`
@@ -373,8 +373,8 @@ The password reset flow uses better-auth's built-in `sendResetPassword` hook wit
 ### Installation
 
 ```bash
-git clone https://github.com/Sani-Mohibur/skill-bridge-backend.git
-cd skill-bridge-backend
+git clone https://github.com/Sani-Mohibur/tutor-marketplace-backend
+cd tutor-marketplace-backend
 npm install
 ```
 
