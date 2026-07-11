@@ -90,6 +90,37 @@ const searchTutors = async (
   };
 };
 
+const getFeaturedTutors = async () => {
+  const featuredTutors = await prisma.tutorProfile.findMany({
+    where: {
+      isFeatured: true,
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+      categories: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+
+  return featuredTutors.map((tutor: any) => ({
+    ...tutor,
+    name: tutor.user?.name || "Unknown Mentor",
+    categories: tutor.categories.map((cat: any) => cat.name),
+  }));
+};
+
 const getAllCategories = async () => {
   return await prisma.category.findMany({
     select: {
@@ -144,6 +175,7 @@ const getTutorById = async (id: string) => {
 
 export const tutorService = {
   searchTutors,
+  getFeaturedTutors,
   getAllCategories,
   getTutorById,
 };

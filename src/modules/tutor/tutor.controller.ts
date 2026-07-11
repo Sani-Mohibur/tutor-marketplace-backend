@@ -53,6 +53,19 @@ const searchTutors = catchAsync(
   },
 );
 
+const getFeaturedTutors = catchAsync(
+  async (req: Request, res: Response): Promise<void> => {
+    const data = await tutorService.getFeaturedTutors();
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Featured tutors retrieved successfully.",
+      data,
+    });
+  },
+);
+
 const getAllCategories = catchAsync(
   async (req: Request, res: Response): Promise<void> => {
     const data = await tutorService.getAllCategories();
@@ -86,6 +99,7 @@ const getTutorById = catchAsync(
 
 export const tutorController = {
   searchTutors,
+  getFeaturedTutors,
   getAllCategories,
   getTutorById,
 };
