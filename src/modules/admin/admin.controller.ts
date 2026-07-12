@@ -2,7 +2,21 @@ import { Request, Response } from "express";
 import { adminService } from "./admin.service.js";
 import catchAsync from "../../utils/catchAsync.js";
 import ApiError from "../../errors/ApiError.js";
+import { cloudinary } from "../../lib/cloudinary.js";
 import sendResponse from "../../utils/sendResponse.js";
+
+const getPublicStats = catchAsync(
+  async (req: Request, res: Response): Promise<void> => {
+    const data = await adminService.getPublicStats();
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Public statistics aggregated successfully.",
+      data,
+    });
+  },
+);
 
 const getDashboardStats = catchAsync(
   async (req: Request, res: Response): Promise<void> => {
@@ -40,7 +54,7 @@ const toggleUserBan = catchAsync(
 
 const createCategory = catchAsync(
   async (req: Request, res: Response): Promise<void> => {
-    const { name } = req.body;
+    let { name, description, icon, isFeatured } = req.body;
 
     if (!name || typeof name !== "string" || name.trim() === "") {
       throw new ApiError(
@@ -49,7 +63,30 @@ const createCategory = catchAsync(
       );
     }
 
-    const data = await adminService.createCategory(name);
+    if (description && description.length > 100) {
+      throw new ApiError(400, "Description must be 100 characters or less.");
+    }
+
+    if (typeof isFeatured === "string") {
+      isFeatured = isFeatured === "true";
+    }
+
+    let finalIcon = icon;
+    if (req.file) {
+      const result = await new Promise<any>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "skillbridge/categories", resource_type: "image" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        uploadStream.end(req.file!.buffer);
+      });
+      finalIcon = result.secure_url;
+    }
+
+    const data = await adminService.createCategory(name, description, finalIcon, isFeatured);
 
     res.status(201).json({
       success: true,
@@ -58,6 +95,71 @@ const createCategory = catchAsync(
     });
   },
 );
+
+const updateCategory = catchAsync(
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    let { name, description, icon, isFeatured } = req.body;
+
+    if (!name || typeof name !== "string" || name.trim() === "") {
+      throw new ApiError(
+        400,
+        "Category name is required and must be a valid string.",
+      );
+    }
+
+    if (description && description.length > 100) {
+      throw new ApiError(400, "Description must be 100 characters or less.");
+    }
+
+    if (typeof isFeatured === "string") {
+      isFeatured = isFeatured === "true";
+    }
+
+    let finalIcon = icon;
+    if (req.file) {
+      const result = await new Promise<any>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "skillbridge/categories", resource_type: "image" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        uploadStream.end(req.file!.buffer);
+      });
+      finalIcon = result.secure_url;
+    }
+
+    const data = await adminService.updateCategory(id as string, name, description, finalIcon, isFeatured);
+
+    res.status(200).json({
+      success: true,
+      message: "Category updated successfully.",
+      data,
+    });
+  },
+);
+
+const getAllCategories = catchAsync(async (req: Request, res: Response) => {
+  const data = await adminService.getAllCategories();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Categories fetched successfully.",
+    data,
+  });
+});
+
+const getFeaturedCategories = catchAsync(async (req: Request, res: Response) => {
+  const data = await adminService.getFeaturedCategories();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Featured categories fetched successfully.",
+    data,
+  });
+});
 
 const deleteCategory = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -189,10 +291,14 @@ const getAllAvailabilities = catchAsync(
 );
 
 export const adminController = {
+  getPublicStats,
   getDashboardStats,
   toggleUserBan,
   createCategory,
+  updateCategory,
   deleteCategory,
+  getAllCategories,
+  getFeaturedCategories,
   toggleTutorFeatured,
   getAllUsers,
   getAllTutors,

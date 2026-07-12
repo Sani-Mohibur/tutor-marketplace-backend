@@ -5,6 +5,12 @@ import { USER_ROLES } from "../../constants/user.constants.js";
 
 const adminRouter = Router();
 
+// Public endpoint for homepage statistics
+adminRouter.get("/public-stats", adminController.getPublicStats);
+
+// Public endpoint for featured categories
+adminRouter.get("/featured-categories", adminController.getFeaturedCategories);
+
 // Secure all admin endpoints exclusively for users with the "admin" role
 adminRouter.use(requireAuth([USER_ROLES.ADMIN as any]));
 
@@ -26,8 +32,16 @@ adminRouter.patch(
 adminRouter.get("/bookings", adminController.getAllBookings);
 adminRouter.get("/availabilities", adminController.getAllAvailabilities);
 
+import multer from "multer";
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+});
+
 // --- Category Maintenance Endpoints ---
-adminRouter.post("/categories", adminController.createCategory);
+adminRouter.get("/categories", adminController.getAllCategories);
+adminRouter.post("/categories", upload.single("iconFile"), adminController.createCategory);
+adminRouter.patch("/categories/:id", upload.single("iconFile"), adminController.updateCategory);
 adminRouter.delete("/categories/:id", adminController.deleteCategory);
 
 export default adminRouter;
