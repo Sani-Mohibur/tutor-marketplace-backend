@@ -37,8 +37,8 @@ const getMyReviews = catchAsync(
 );
 
 const getAll = catchAsync(async (req: Request, res: Response) => {
-  const data = await reviewService.getAllReviews();
-  res.status(200).json({ success: true, data });
+  const result = await reviewService.getAllReviews(req.query);
+  res.status(200).json({ success: true, meta: result.meta, data: result.data });
 });
 
 const toggleFeature = catchAsync(async (req: Request, res: Response) => {

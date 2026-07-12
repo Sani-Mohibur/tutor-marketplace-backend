@@ -110,10 +110,34 @@ const updateCategory = async (
   });
 };
 
-const getAllCategories = async () => {
-  return await prisma.category.findMany({
-    orderBy: { createdAt: "desc" },
+const getAllCategories = async (query: any) => {
+  const paginationResult = paginationHelper.calculatePagination({
+    page: query.page ? Number(query.page) : undefined,
+    limit: query.limit ? Number(query.limit) : undefined,
+    sortBy: query.sortBy || "createdAt",
+    sortOrder: query.sortOrder || "desc",
   });
+
+  const [totalCategories, categories] = await Promise.all([
+    prisma.category.count(),
+    prisma.category.findMany({
+      skip: paginationResult.skip,
+      take: paginationResult.limit,
+      orderBy: {
+        [paginationResult.sortBy]: paginationResult.sortOrder,
+      },
+    }),
+  ]);
+
+  return {
+    meta: {
+      page: paginationResult.page,
+      limit: paginationResult.limit,
+      totalCategories,
+      totalPages: Math.ceil(totalCategories / paginationResult.limit),
+    },
+    data: categories,
+  };
 };
 
 const getFeaturedCategories = async () => {

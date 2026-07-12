@@ -35,11 +35,12 @@ export const contactController = {
 
   getAllContacts: async (req: Request, res: Response) => {
     try {
-      const contacts = await contactService.getAllContacts();
+      const result = await contactService.getAllContacts(req.query);
 
       res.status(200).json({
         success: true,
-        data: contacts,
+        meta: result.meta,
+        data: result.data,
       });
     } catch (error) {
       console.error("Error fetching contacts:", error);

@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
+import { paginationHelper } from "../../utils/paginationHelper.js";
 
 interface CreateReviewData {
   studentUserId: string;
@@ -107,18 +108,42 @@ export const reviewService = {
   getByTutor,
   getMyReviews,
   
-  getAllReviews: async () => {
-    return await prisma.review.findMany({
-      include: {
-        studentProfile: {
-          include: { user: { select: { name: true } } },
-        },
-        tutorProfile: {
-          include: { user: { select: { name: true } } },
-        },
-      },
-      orderBy: { createdAt: "desc" },
+  getAllReviews: async (query: any) => {
+    const paginationResult = paginationHelper.calculatePagination({
+      page: query.page ? Number(query.page) : undefined,
+      limit: query.limit ? Number(query.limit) : undefined,
+      sortBy: query.sortBy || "createdAt",
+      sortOrder: query.sortOrder || "desc",
     });
+
+    const [totalReviews, reviews] = await Promise.all([
+      prisma.review.count(),
+      prisma.review.findMany({
+        include: {
+          studentProfile: {
+            include: { user: { select: { name: true } } },
+          },
+          tutorProfile: {
+            include: { user: { select: { name: true } } },
+          },
+        },
+        skip: paginationResult.skip,
+        take: paginationResult.limit,
+        orderBy: {
+          [paginationResult.sortBy]: paginationResult.sortOrder,
+        },
+      }),
+    ]);
+
+    return {
+      meta: {
+        page: paginationResult.page,
+        limit: paginationResult.limit,
+        totalReviews,
+        totalPages: Math.ceil(totalReviews / paginationResult.limit),
+      },
+      data: reviews,
+    };
   },
 
   toggleFeatureReview: async (id: string) => {

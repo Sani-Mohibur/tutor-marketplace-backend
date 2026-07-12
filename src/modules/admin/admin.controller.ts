@@ -142,12 +142,13 @@ const updateCategory = catchAsync(
 );
 
 const getAllCategories = catchAsync(async (req: Request, res: Response) => {
-  const data = await adminService.getAllCategories();
+  const result = await adminService.getAllCategories(req.query);
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "Categories fetched successfully.",
-    data,
+    meta: result.meta,
+    data: result.data,
   });
 });
 
