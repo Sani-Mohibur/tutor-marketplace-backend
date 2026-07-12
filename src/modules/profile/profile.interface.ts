@@ -16,4 +16,5 @@ export interface UpdateTutorData {
   experienceYears?: number;
   pricePerHour?: number;
   categories?: string[];
+  images?: string[];
 }

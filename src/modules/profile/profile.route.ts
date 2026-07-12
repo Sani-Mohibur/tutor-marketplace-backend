@@ -40,4 +40,12 @@ profileRouter.post(
   profileController.uploadProfileImage,
 );
 
+// Multiple image upload route for tutor gallery — accepts up to 10 files
+profileRouter.post(
+  "/upload-tutor-images",
+  requireAuth([USER_ROLES.TUTOR]),
+  upload.array("images", 10),
+  profileController.uploadTutorImages,
+);
+
 export default profileRouter;

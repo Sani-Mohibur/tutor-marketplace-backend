@@ -11,6 +11,7 @@ model TutorProfile {
     experienceYears  Int            @default(0) // Years of teaching experience
     pricePerHour     Float          @default(0.0)
     rating           Float          @default(0.0)
+    images           String[]
     reviewCount      Int            @default(0)
     totalHoursTaught Int            @default(0)
     categories       Category[]

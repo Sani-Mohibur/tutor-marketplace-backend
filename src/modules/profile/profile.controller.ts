@@ -78,8 +78,43 @@ const uploadProfileImage = catchAsync(
   },
 );
 
+const uploadTutorImages = catchAsync(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+      throw new ApiError(400, "No image files provided.");
+    }
+
+    const uploadPromises = req.files.map((file) => {
+      return new Promise<string>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "skillbridge/tutor-gallery",
+            transformation: [{ width: 1280, height: 720, crop: "limit" }],
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result!.secure_url);
+          },
+        );
+        uploadStream.end(file.buffer);
+      });
+    });
+
+    const imageUrls = await Promise.all(uploadPromises);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Tutor gallery images uploaded successfully.",
+      data: imageUrls,
+    });
+  },
+);
+
 export const profileController = {
   getMyProfile,
   updateMyProfile,
   uploadProfileImage,
+  uploadTutorImages,
 };
