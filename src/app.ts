@@ -12,6 +12,7 @@ import { globalErrorHandler } from "./middlewares/globalErrorHandler.js";
 import adminRouter from "./modules/admin/admin.route.js";
 import paymentRouter from "./modules/payment/payment.route.js";
 import { paymentController } from "./modules/payment/payment.controller.js";
+import contactRouter from "./modules/contact/contact.route.js";
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use("/api/profile", profileRouter);
 app.use("/api/tutor", tutorRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/payments", paymentRouter);
+app.use("/api/contact", contactRouter);
 
 // 6. Global Error Handler (Must be registered last)
 app.use(globalErrorHandler);
