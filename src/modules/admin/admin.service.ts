@@ -2,6 +2,20 @@ import ApiError from "../../errors/ApiError.js";
 import { prisma } from "../../lib/prisma.js";
 import { paginationHelper } from "../../utils/paginationHelper.js";
 
+const getPublicStats = async () => {
+  const [totalTutors, totalStudents, totalSlots] = await Promise.all([
+    prisma.user.count({ where: { role: "tutor" } }),
+    prisma.user.count({ where: { role: "student" } }),
+    prisma.availability.count(),
+  ]);
+
+  return {
+    totalTutors,
+    totalStudents,
+    totalSlots,
+  };
+};
+
 const getDashboardStats = async () => {
   const [
     totalUsers,
@@ -51,7 +65,12 @@ const updateUserBanStatus = async (userId: string, banned: boolean) => {
   });
 };
 
-const createCategory = async (name: string) => {
+const createCategory = async (
+  name: string,
+  description?: string | null,
+  icon?: string | null,
+  isFeatured?: boolean
+) => {
   const normalizedName = name.trim();
 
   const existingCategory = await prisma.category.findUnique({
@@ -63,7 +82,44 @@ const createCategory = async (name: string) => {
   }
 
   return await prisma.category.create({
-    data: { name: normalizedName },
+    data: { name: normalizedName, description, icon, isFeatured },
+  });
+};
+
+const updateCategory = async (
+  id: string,
+  name: string,
+  description?: string | null,
+  icon?: string | null,
+  isFeatured?: boolean
+) => {
+  const category = await prisma.category.findUnique({ where: { id } });
+  if (!category) {
+    throw new ApiError(404, "Category not found.");
+  }
+
+  const normalizedName = name.trim();
+  if (normalizedName !== category.name) {
+    const existing = await prisma.category.findUnique({ where: { name: normalizedName } });
+    if (existing) throw new ApiError(400, "Category with this name already exists.");
+  }
+
+  return await prisma.category.update({
+    where: { id },
+    data: { name: normalizedName, description, icon, isFeatured },
+  });
+};
+
+const getAllCategories = async () => {
+  return await prisma.category.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+};
+
+const getFeaturedCategories = async () => {
+  return await prisma.category.findMany({
+    where: { isFeatured: true },
+    orderBy: { createdAt: "desc" },
   });
 };
 
@@ -359,10 +415,14 @@ const getAllAvailabilities = async (query: any) => {
 };
 
 export const adminService = {
+  getPublicStats,
   getDashboardStats,
   updateUserBanStatus,
   createCategory,
+  updateCategory,
   deleteCategory,
+  getAllCategories,
+  getFeaturedCategories,
   updateTutorFeaturedStatus,
   getAllUsers,
   getAllTutors,
