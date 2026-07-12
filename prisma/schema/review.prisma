@@ -1,14 +1,17 @@
 model Review {
-    id               String         @id @default(uuid())
-    studentProfileId String
-    studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+    id               String          @id @default(uuid())
+    studentProfileId String?
+    studentProfile   StudentProfile? @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
     tutorProfileId   String
-    tutorProfile     TutorProfile   @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
-    bookingId        String         @unique // One review per completed booking
-    booking          Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+    tutorProfile     TutorProfile    @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
+    bookingId        String?         @unique // One review per completed booking
+    booking          Booking?        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
     rating           Int
     comment          String?
-    createdAt        DateTime       @default(now())
+    isPlaceholder    Boolean         @default(false)
+    placeholderName  String?
+    isFeatured       Boolean         @default(false)
+    createdAt        DateTime        @default(now())
 
     @@map("review")
 }

@@ -106,4 +106,73 @@ export const reviewService = {
   add,
   getByTutor,
   getMyReviews,
+  
+  getAllReviews: async () => {
+    return await prisma.review.findMany({
+      include: {
+        studentProfile: {
+          include: { user: { select: { name: true } } },
+        },
+        tutorProfile: {
+          include: { user: { select: { name: true } } },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  },
+
+  toggleFeatureReview: async (id: string) => {
+    const review = await prisma.review.findUnique({ where: { id } });
+    if (!review) throw new Error("Review not found");
+
+    return await prisma.review.update({
+      where: { id },
+      data: { isFeatured: !review.isFeatured },
+    });
+  },
+
+  addPlaceholderReview: async (data: { tutorProfileId: string; rating: number; comment?: string; placeholderName: string }) => {
+    return await prisma.$transaction(async (tx: any) => {
+      const newReview = await tx.review.create({
+        data: {
+          tutorProfileId: data.tutorProfileId,
+          rating: data.rating,
+          comment: data.comment,
+          isPlaceholder: true,
+          placeholderName: data.placeholderName,
+        },
+      });
+
+      const aggregations = await tx.review.aggregate({
+        where: { tutorProfileId: data.tutorProfileId },
+        _avg: { rating: true },
+        _count: { id: true },
+      });
+
+      const newAverageRating = aggregations._avg.rating || 0;
+      const totalReviewsCount = aggregations._count.id || 0;
+
+      await tx.tutorProfile.update({
+        where: { id: data.tutorProfileId },
+        data: { rating: newAverageRating, reviewCount: totalReviewsCount },
+      });
+
+      return newReview;
+    });
+  },
+
+  getFeaturedReviews: async () => {
+    return await prisma.review.findMany({
+      where: { isFeatured: true },
+      include: {
+        studentProfile: {
+          include: { user: { select: { name: true, image: true } } },
+        },
+        tutorProfile: {
+          include: { user: { select: { name: true, image: true } } },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  },
 };

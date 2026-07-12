@@ -36,8 +36,39 @@ const getMyReviews = catchAsync(
   },
 );
 
+const getAll = catchAsync(async (req: Request, res: Response) => {
+  const data = await reviewService.getAllReviews();
+  res.status(200).json({ success: true, data });
+});
+
+const toggleFeature = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const data = await reviewService.toggleFeatureReview(id as string);
+  res.status(200).json({ success: true, message: "Review featured status updated.", data });
+});
+
+const addPlaceholder = catchAsync(async (req: Request, res: Response) => {
+  const { tutorProfileId, rating, comment, placeholderName } = req.body;
+  const data = await reviewService.addPlaceholderReview({
+    tutorProfileId,
+    rating,
+    comment,
+    placeholderName,
+  });
+  res.status(201).json({ success: true, message: "Placeholder review added.", data });
+});
+
+const getFeatured = catchAsync(async (req: Request, res: Response) => {
+  const data = await reviewService.getFeaturedReviews();
+  res.status(200).json({ success: true, data });
+});
+
 export const reviewController = {
   add,
   getByTutor,
   getMyReviews,
+  getAll,
+  toggleFeature,
+  addPlaceholder,
+  getFeatured,
 };
