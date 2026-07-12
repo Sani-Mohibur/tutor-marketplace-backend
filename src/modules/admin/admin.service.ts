@@ -190,6 +190,18 @@ const updateTutorFeaturedStatus = async (
 };
 
 const getAllUsers = async (query: any) => {
+  if (query.chart === "true") {
+    const users = await prisma.user.findMany({
+      where: { role: { in: ["student", "tutor"] } },
+      select: { role: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    });
+    return {
+      meta: { chart: true },
+      data: users,
+    };
+  }
+
   const paginationResult = paginationHelper.calculatePagination({
     page: query.page ? Number(query.page) : undefined,
     limit: query.limit ? Number(query.limit) : undefined,
