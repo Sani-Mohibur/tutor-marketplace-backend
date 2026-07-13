@@ -10,7 +10,7 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
 
-  baseURL: process.env.BACKEND_URL,
+  baseURL: process.env.BETTER_AUTH_URL,
 
   emailAndPassword: {
     enabled: true,
