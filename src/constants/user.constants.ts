@@ -2,6 +2,7 @@ export const USER_ROLES = {
   STUDENT: "student",
   TUTOR: "tutor",
   ADMIN: "admin",
+  PENDING: "pending",
 } as const;
 
 // Generate type utility matching: "student" | "tutor" | "admin"

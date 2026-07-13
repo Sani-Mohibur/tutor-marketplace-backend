@@ -5,6 +5,7 @@ import catchAsync from "../../utils/catchAsync.js";
 import sendResponse from "../../utils/sendResponse.js";
 import ApiError from "../../errors/ApiError.js";
 import { cloudinary } from "../../lib/cloudinary.js";
+import { prisma } from "../../lib/prisma.js";
 
 interface AuthenticatedRequest extends Request {
   user?: { id: string; role: string; email: string; name: string };
@@ -112,9 +113,66 @@ const uploadTutorImages = catchAsync(
   },
 );
 
+const finalizeOauth = catchAsync(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const { id } = req.user!;
+    const { role } = req.body;
+
+    if (![USER_ROLES.STUDENT, USER_ROLES.TUTOR].includes(role)) {
+      throw new ApiError(400, "Invalid role specified.");
+    }
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) throw new ApiError(404, "User not found.");
+    if (user.role !== "pending") {
+      throw new ApiError(400, "User role is already finalized.");
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id },
+        data: { role },
+      });
+
+      if (role === USER_ROLES.STUDENT) {
+        await tx.studentProfile.create({ data: { userId: id } });
+      } else if (role === USER_ROLES.TUTOR) {
+        await tx.tutorProfile.create({ data: { userId: id } });
+      }
+    });
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "OAuth user role finalized successfully.",
+    });
+  }
+);
+
+const getAuthMethods = catchAsync(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const { id } = req.user!;
+    const accounts = await prisma.account.findMany({
+      where: { userId: id },
+      select: { providerId: true },
+    });
+
+    const providers = accounts.map((acc) => acc.providerId);
+    
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Auth methods retrieved successfully.",
+      data: { providers },
+    });
+  }
+);
+
 export const profileController = {
   getMyProfile,
   updateMyProfile,
   uploadProfileImage,
   uploadTutorImages,
+  finalizeOauth,
+  getAuthMethods,
 };

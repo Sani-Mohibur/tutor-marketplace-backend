@@ -27,6 +27,20 @@ export const auth = betterAuth({
   //   },
   // },
 
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
+
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google"],
+    },
+  },
+
   trustedOrigins: [process.env.CLIENT_URL!],
   advanced: {
     useSecureCookies: true,
@@ -40,7 +54,7 @@ export const auth = betterAuth({
     additionalFields: {
       role: {
         type: "string",
-        defaultValue: USER_ROLES.STUDENT,
+        defaultValue: "pending",
         required: true,
       },
       banned: {
@@ -65,6 +79,8 @@ export const auth = betterAuth({
               data: { userId: user.id },
             });
           }
+          // If role is "pending" (from Google OAuth), we skip profile creation here.
+          // It will be handled by the /api/profile/finalize-oauth endpoint.
         },
       },
     },

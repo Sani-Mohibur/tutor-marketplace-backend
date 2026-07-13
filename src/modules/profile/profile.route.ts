@@ -48,4 +48,18 @@ profileRouter.post(
   profileController.uploadTutorImages,
 );
 
+// OAuth finalization route (allows "pending" role)
+profileRouter.post(
+  "/finalize-oauth",
+  requireAuth([USER_ROLES.PENDING]),
+  profileController.finalizeOauth,
+);
+
+// Get auth methods route
+profileRouter.get(
+  "/auth-methods",
+  requireAuth([USER_ROLES.STUDENT, USER_ROLES.TUTOR, USER_ROLES.PENDING]),
+  profileController.getAuthMethods,
+);
+
 export default profileRouter;
