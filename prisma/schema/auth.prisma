@@ -10,6 +10,7 @@ model User {
     accounts       Account[]
     role           String // "student" | "tutor" | "admin" - Better auth fills student if this field is empty
     banned         Boolean         @default(false)
+    isNameChanged  Boolean         @default(false)
     studentProfile StudentProfile?
     tutorProfile   TutorProfile?
 

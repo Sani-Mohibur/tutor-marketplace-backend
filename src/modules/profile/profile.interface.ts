@@ -1,5 +1,6 @@
 // studentProfile Interface
 export interface UpdateStudentData {
+  name?: string;
   bio?: string;
   education?: string;
   interests?: string[];
@@ -9,6 +10,7 @@ export interface UpdateStudentData {
 
 // tutorProfile Interface
 export interface UpdateTutorData {
+  name?: string;
   title?: string;
   bio?: string;
   qualifications?: string;

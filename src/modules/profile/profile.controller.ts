@@ -26,6 +26,14 @@ const getMyProfile = catchAsync(
 const updateMyProfile = catchAsync(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const { id, role } = req.user!;
+
+    if (req.body.name) {
+      const user = await prisma.user.findUnique({ where: { id } });
+      if (user?.isNameChanged) {
+        throw new ApiError(400, "You have already used your one-time name change.");
+      }
+    }
+
     const data =
       role === USER_ROLES.STUDENT
         ? await profileService.updateStudent(id, req.body)

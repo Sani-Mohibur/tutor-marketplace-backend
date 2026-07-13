@@ -5,15 +5,25 @@ const getStudent = async (userId: string) => {
   return await prisma.studentProfile.findUnique({
     where: { userId },
     include: {
-      user: { select: { name: true, email: true, role: true, image: true } },
+      user: { select: { name: true, email: true, role: true, image: true, isNameChanged: true } },
     },
   });
 };
 
 const updateStudent = async (userId: string, payload: UpdateStudentData) => {
-  return await prisma.studentProfile.update({
-    where: { userId },
-    data: payload,
+  const { name, ...restPayload } = payload;
+
+  return await prisma.$transaction(async (tx) => {
+    if (name) {
+      await tx.user.update({
+        where: { id: userId },
+        data: { name, isNameChanged: true },
+      });
+    }
+    return await tx.studentProfile.update({
+      where: { userId },
+      data: restPayload,
+    });
   });
 };
 
@@ -22,7 +32,7 @@ const getTutor = async (userId: string) => {
     where: { userId },
     include: {
       user: {
-        select: { name: true, email: true, role: true, image: true },
+        select: { name: true, email: true, role: true, image: true, isNameChanged: true },
       },
       categories: { select: { id: true, name: true } },
     },
@@ -31,18 +41,27 @@ const getTutor = async (userId: string) => {
 
 // Handle m2m - tutor have multiple category
 const updateTutor = async (userId: string, payload: UpdateTutorData) => {
-  const { categories, ...restPayload } = payload;
+  const { categories, name, ...restPayload } = payload;
 
-  return await prisma.tutorProfile.update({
-    where: { userId },
-    data: {
-      ...restPayload,
-      ...(categories && {
-        categories: {
-          set: categories.map((id) => ({ id })),
-        },
-      }),
-    },
+  return await prisma.$transaction(async (tx) => {
+    if (name) {
+      await tx.user.update({
+        where: { id: userId },
+        data: { name, isNameChanged: true },
+      });
+    }
+
+    return await tx.tutorProfile.update({
+      where: { userId },
+      data: {
+        ...restPayload,
+        ...(categories && {
+          categories: {
+            set: categories.map((id) => ({ id })),
+          },
+        }),
+      },
+    });
   });
 };
 
