@@ -291,6 +291,20 @@ const getAllAvailabilities = catchAsync(
   },
 );
 
+const getAllPayments = catchAsync(
+  async (req: Request, res: Response): Promise<void> => {
+    const result = await adminService.getAllPayments(req.query);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Payment transaction logs retrieved successfully.",
+      meta: result.meta,
+      data: result.data,
+    });
+  },
+);
+
 export const adminController = {
   getPublicStats,
   getDashboardStats,
@@ -306,4 +320,5 @@ export const adminController = {
   toggleTutorVerification,
   getAllBookings,
   getAllAvailabilities,
+  getAllPayments,
 };

@@ -31,6 +31,7 @@ adminRouter.patch(
 // --- Platform Activity Master Logs ---
 adminRouter.get("/bookings", adminController.getAllBookings);
 adminRouter.get("/availabilities", adminController.getAllAvailabilities);
+adminRouter.get("/payments", adminController.getAllPayments);
 
 import multer from "multer";
 

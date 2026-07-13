@@ -26,6 +26,7 @@ const getDashboardStats = async () => {
     totalAvailabilities,
     totalFeatured,
     totalVerified,
+    revenueAgg,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { role: "tutor" } }),
@@ -35,6 +36,10 @@ const getDashboardStats = async () => {
     prisma.availability.count(),
     prisma.tutorProfile.count({ where: { isFeatured: true } }),
     prisma.tutorProfile.count({ where: { isVerified: true } }),
+    prisma.booking.aggregate({
+      _sum: { amount: true },
+      where: { paymentStatus: "paid" }
+    }),
   ]);
 
   return {
@@ -46,6 +51,7 @@ const getDashboardStats = async () => {
     totalAvailabilities,
     totalFeatured,
     totalVerified,
+    totalRevenue: revenueAgg._sum.amount || 0,
   };
 };
 
@@ -450,6 +456,95 @@ const getAllAvailabilities = async (query: any) => {
   };
 };
 
+// 5. View All Payments and Total Revenue
+const getAllPayments = async (query: any) => {
+  if (query.chart === "true") {
+    const payments = await prisma.booking.findMany({
+      where: {
+        paymentStatus: { in: ["paid", "cash"] },
+      },
+      select: { amount: true, currency: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    });
+    return {
+      meta: { chart: true },
+      data: payments,
+    };
+  }
+
+  const paginationResult = paginationHelper.calculatePagination({
+    page: query.page ? Number(query.page) : undefined,
+    limit: query.limit ? Number(query.limit) : undefined,
+    sortBy: query.sortBy || "createdAt",
+    sortOrder: query.sortOrder || "desc",
+  });
+
+  const whereConditions: any = {
+    paymentStatus: {
+      in: ["paid", "cash"],
+    },
+  };
+
+  if (query.search) {
+    whereConditions.OR = [
+      {
+        studentProfile: {
+          user: { name: { contains: query.search, mode: "insensitive" } },
+        },
+      },
+      {
+        tutorProfile: {
+          user: { name: { contains: query.search, mode: "insensitive" } },
+        },
+      },
+      { stripeCheckoutSessionId: { contains: query.search, mode: "insensitive" } },
+      { id: { contains: query.search, mode: "insensitive" } },
+    ];
+  }
+
+  // Calculate total revenue independently of the current page query (but possibly filtered by search if desired, 
+  // though usually total revenue is global. We will make it global for the total revenue stat).
+  const revenueAgg = await prisma.booking.aggregate({
+    _sum: { amount: true },
+    where: { paymentStatus: "paid" }
+  });
+
+  const [totalPayments, payments] = await Promise.all([
+    prisma.booking.count({ where: whereConditions }),
+    prisma.booking.findMany({
+      where: whereConditions,
+      include: {
+        studentProfile: {
+          include: {
+            user: { select: { name: true, email: true } },
+          },
+        },
+        tutorProfile: {
+          include: {
+            user: { select: { name: true, email: true } },
+          },
+        },
+      },
+      skip: paginationResult.skip,
+      take: paginationResult.limit,
+      orderBy: {
+        [paginationResult.sortBy]: paginationResult.sortOrder,
+      },
+    }),
+  ]);
+
+  return {
+    meta: {
+      page: paginationResult.page,
+      limit: paginationResult.limit,
+      totalPayments,
+      totalPages: Math.ceil(totalPayments / paginationResult.limit),
+      totalRevenue: revenueAgg._sum.amount || 0,
+    },
+    data: payments,
+  };
+};
+
 export const adminService = {
   getPublicStats,
   getDashboardStats,
@@ -465,4 +560,5 @@ export const adminService = {
   updateTutorVerificationStatus,
   getAllBookings,
   getAllAvailabilities,
+  getAllPayments,
 };
