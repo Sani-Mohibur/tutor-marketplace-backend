@@ -23,7 +23,6 @@ A robust, role-based REST API powering a tutor-student marketplace platform — 
 ## 📚 Table of Contents
 
 - [Overview](#overview)
-- [What's New](#whats-new)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Data Models](#data-models)
@@ -56,7 +55,7 @@ A robust, role-based REST API powering a tutor-student marketplace platform — 
 **Tutor Marketplace** is a full-stack tutoring marketplace platform. This repository contains the backend API server that handles:
 
 - **User authentication** via `better-auth` (email/password with session cookies)
-- **Role-based access control** for three user types: `student`, `tutor`, and `admin`
+- **Role-based access control** for four user types: `student`, `tutor`, `admin`, and `support_admin`
 - **Tutor discovery** — search and filter verified tutors by skill, category, and rating
 - **Availability management** — tutors post time slots; students browse and book them
 - **Booking lifecycle** — pending → confirmed → completed / cancelled, with Stripe payment data support
@@ -65,33 +64,11 @@ A robust, role-based REST API powering a tutor-student marketplace platform — 
 - **Forgot / Reset Password** — email-based password reset flow using Nodemailer with Gmail OAuth2 authentication
 - **Review system** — one review per completed booking; tutor ratings aggregated automatically
 - **Admin control panel** — platform-wide stats, user management, tutor verification, and category control
+- **Support Admin role** — specialized view-only access to specific admin pages and restricted mutation capabilities
 
 ---
 
-## What's New
 
-### 💳 Stripe Payment Integration
-
-- **Two checkout flows:** "book-then-pay" (for `both` / `stripe` payment slots) and "pay-to-book" (stripe-only slots where the booking is created after payment succeeds)
-- **Stripe Webhooks** — a dedicated `/api/webhook` endpoint processes `checkout.session.completed` events to confirm payments and create bookings automatically
-- **Payment receipts** — students can fetch receipt details and download a beautifully styled PDF receipt (generated server-side with Puppeteer)
-- **Idempotent processing** — duplicate webhook deliveries are safely handled
-
-### 🖼️ Cloudinary Image Uploads
-
-- **Profile photo uploads** — students and tutors can upload profile images via a new `/api/profile/upload-image` endpoint
-- **Multer + Cloudinary stream** — images are processed in-memory (up to 10 MB, images only) and uploaded to Cloudinary with automatic face-aware cropping (`400×400`, `gravity: face`)
-- **Stored in database** — the Cloudinary `secure_url` is saved to the `User.image` field
-
-### 🔑 Forgot / Reset Password
-
-- **Forgot Password flow** — uses better-auth's built-in `sendResetPassword` hook to send a styled HTML reset email
-- **Transactional Email Service** — emails are sent using Nodemailer with Gmail OAuth2 (replaced Brevo for the final production implementation)
-- **Token-based reset** — the reset link redirects to the frontend's `/reset-password?token=...` page where users set a new password
-
-> ⚠️ **Known Issue:** The forgot password flow works correctly on localhost but may experience issues on Render due to SMTP-related restrictions in hosted environments. As an alternative solution, Brevo is reliable on Render and requires Brevo credentials to be configured.
-
----
 
 ## Tech Stack
 
@@ -166,7 +143,7 @@ skill-bridge-backend/
 
 | Model            | Key Fields                                                                                       |
 | ---------------- | ------------------------------------------------------------------------------------------------ |
-| `User`           | `id`, `name`, `email`, `image`, `role` (student/tutor/admin), `banned`                           |
+| `User`           | `id`, `name`, `email`, `image`, `role` (student/tutor/admin/support_admin), `banned`, `isNameChanged` |
 | `TutorProfile`   | `bio`, `skills[]`, `pricePerHour`, `rating`, `isVerified`, `isFeatured`                          |
 | `StudentProfile` | `bio`, `education`, `interests[]`, `phone`, `address`                                            |
 | `Availability`   | `slot` (DateTime), `title`, `subject`, `pricePerHour`, `isBooked`, `status`, **`paymentMethod`** |
@@ -274,14 +251,14 @@ Handled internally by better-auth at `/api/auth/*`. The library manages sessions
 | Method | Endpoint                    | Role            | Description                                                 |
 | ------ | --------------------------- | --------------- | ----------------------------------------------------------- |
 | GET    | `/api/profile/me`           | Student / Tutor | Get own profile (role-aware response)                       |
-| PUT    | `/api/profile/update`       | Student / Tutor | Update own profile                                          |
+| PUT    | `/api/profile/update`       | Student / Tutor | Update own profile (name change is restricted to once)      |
 | POST   | `/api/profile/upload-image` | Student / Tutor | Upload a profile image via Cloudinary (multipart/form-data) |
 
 ---
 
 ### Admin
 
-> All endpoints require the `admin` role.
+> All endpoints require the `admin` or `support_admin` role. Note that `support_admin` has restricted access and cannot mutate categories or add placeholder reviews.
 
 | Method | Endpoint                         | Description                           |
 | ------ | -------------------------------- | ------------------------------------- |
@@ -293,8 +270,8 @@ Handled internally by better-auth at `/api/auth/*`. The library manages sessions
 | PATCH  | `/api/admin/tutors/:id/verify`   | Toggle tutor verification status      |
 | GET    | `/api/admin/bookings`            | View all bookings across the platform |
 | GET    | `/api/admin/availabilities`      | View all availability slots           |
-| POST   | `/api/admin/categories`          | Create a new tutor category           |
-| DELETE | `/api/admin/categories/:id`      | Delete a category                     |
+| POST   | `/api/admin/categories`          | Create a new tutor category (`admin` only) |
+| DELETE | `/api/admin/categories/:id`      | Delete a category (`admin` only)      |
 
 ---
 
