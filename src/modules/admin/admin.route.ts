@@ -11,8 +11,8 @@ adminRouter.get("/public-stats", adminController.getPublicStats);
 // Public endpoint for featured categories
 adminRouter.get("/featured-categories", adminController.getFeaturedCategories);
 
-// Secure all admin endpoints exclusively for users with the "admin" role
-adminRouter.use(requireAuth([USER_ROLES.ADMIN as any]));
+// Secure all admin endpoints exclusively for users with the "admin" and "support_admin" roles
+adminRouter.use(requireAuth([USER_ROLES.ADMIN, USER_ROLES.SUPPORT_ADMIN]));
 
 adminRouter.patch("/tutors/:id/featured", adminController.toggleTutorFeatured);
 
@@ -41,8 +41,8 @@ const upload = multer({
 
 // --- Category Maintenance Endpoints ---
 adminRouter.get("/categories", adminController.getAllCategories);
-adminRouter.post("/categories", upload.single("iconFile"), adminController.createCategory);
-adminRouter.patch("/categories/:id", upload.single("iconFile"), adminController.updateCategory);
-adminRouter.delete("/categories/:id", adminController.deleteCategory);
+adminRouter.post("/categories", requireAuth([USER_ROLES.ADMIN]), upload.single("iconFile"), adminController.createCategory);
+adminRouter.patch("/categories/:id", requireAuth([USER_ROLES.ADMIN]), upload.single("iconFile"), adminController.updateCategory);
+adminRouter.delete("/categories/:id", requireAuth([USER_ROLES.ADMIN]), adminController.deleteCategory);
 
 export default adminRouter;

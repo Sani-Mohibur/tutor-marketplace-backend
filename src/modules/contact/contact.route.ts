@@ -13,7 +13,7 @@ router.post("/", contactController.createContact);
 // Admin-only route to get all contacts
 router.get(
   "/",
-  requireAuth([USER_ROLES.ADMIN]),
+  requireAuth([USER_ROLES.ADMIN, USER_ROLES.SUPPORT_ADMIN]),
   contactController.getAllContacts
 );
 

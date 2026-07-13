@@ -4,20 +4,21 @@ async function main() {
   console.log("🌱 Starting database seeding...");
 
   // Seed Admin account via signup API
-  const adminEmail = "farabisunny5@gmail.com";
+  // const adminEmail = "farabisunny5@gmail.com";
+  const supportAdminEmail = "supportadmin@skillbridge.com"
   console.log("Checking if admin account exists...");
 
   const existingUser = await prisma.user.findUnique({
-    where: { email: adminEmail },
+    where: { email: supportAdminEmail },
   });
 
   if (!existingUser) {
     console.log("Registering admin account via API endpoint...");
     const adminData = {
-      name: "Farabi Sunny",
-      email: adminEmail,
-      password: "farabi1234",
-      role: "admin",
+      name: "Mohibur Rahman",
+      email: supportAdminEmail,
+      password: "QuantumSync33",
+      role: "support_admin",
     };
 
     const baseUrl = process.env.BACKEND_URL;
@@ -38,7 +39,7 @@ async function main() {
 
     console.log("Elevating user privileges to Admin role...");
     await prisma.user.update({
-      where: { email: adminEmail },
+      where: { email: supportAdminEmail },
       data: {
         // role: "admin",
         emailVerified: true,
@@ -50,8 +51,8 @@ async function main() {
       "Admin user account already exists. Elevating permissions just in case...",
     );
     await prisma.user.update({
-      where: { email: adminEmail },
-      data: { role: "admin" },
+      where: { email: supportAdminEmail },
+      data: { role: "support_admin" },
     });
   }
 }

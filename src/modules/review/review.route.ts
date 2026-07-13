@@ -24,12 +24,12 @@ reviewRouter.get(
 // 3. Admin Routes
 reviewRouter.get(
   "/admin/all",
-  requireAuth([USER_ROLES.ADMIN]),
+  requireAuth([USER_ROLES.ADMIN, USER_ROLES.SUPPORT_ADMIN]),
   reviewController.getAll,
 );
 reviewRouter.patch(
   "/admin/:id/feature",
-  requireAuth([USER_ROLES.ADMIN]),
+  requireAuth([USER_ROLES.ADMIN, USER_ROLES.SUPPORT_ADMIN]),
   reviewController.toggleFeature,
 );
 reviewRouter.post(
